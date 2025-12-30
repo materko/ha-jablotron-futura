@@ -79,7 +79,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         ents.append(FuturaSimpleSensor(coord, k, n, PERCENTAGE, SensorDeviceClass.HUMIDITY))
 
     # mk UI
-    ents.append(FuturaSimpleSensor(coord, "mk_ui_count", "UI sensors – počet"))
+    ents.append(FuturaSimpleSensor(coord, "mk_ui_count", "UI ovladace – počet"))
     mk_ui_count = int(coord.data.get("mk_ui_count", 0) or 0)
     if mk_ui_count > 0:
         for i in range(1, 4):
@@ -97,7 +97,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
                                            avail_key=avail))
 
     # mk sensors
-    ents.append(FuturaSimpleSensor(coord, "mk_sens_count", "Sensors – počet"))
+    ents.append(FuturaSimpleSensor(coord, "mk_sens_count", "Senzory – počet"))
     mk_sens_count = int(coord.data.get("mk_sens_count", 0) or 0)
     if mk_sens_count > 0:
         for i in range(1, 4):
