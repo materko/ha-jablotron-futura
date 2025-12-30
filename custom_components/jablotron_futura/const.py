@@ -59,6 +59,12 @@ KEYS = {
     # ALFA controllers
     "alfa_connected_bits": 75,  # uint16 bitfield
 
+    # Connected UI controllers
+    "mk_ui_connected_bits": 66, # uint16 bitfield
+
+    # Connected sensors
+    "mk_sens_connected_bits": 67, # uint32 (67,68)
+
     # Holding 0..17
     "mode_raw": 0,              # uint16 (0..6)
     "boost_remaining_s": 1,     # uint16 seconds

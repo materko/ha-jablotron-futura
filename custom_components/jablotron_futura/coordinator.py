@@ -122,6 +122,8 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         inp_40_48 = await self._read_block(40, 9, input_regs=True)   # 40..48 (filtr, příkon, zpětně získávané teplo, výkon topení dohřevu, průtok, ventilátory)
         inp_52 = await self._read_block(52, 1, input_regs=True)      # 52 baterie RTC
         inp_alfa_bits = await self._read_block(KEYS["alfa_connected_bits"], 1, input_regs=True)  # 75 (bitfield)
+        inp_mk_ui_bits = await self._read_block(KEYS["mk_ui_connected_bits"], 1, input_regs=True)  # 66 (bitfield)
+        inp_mk_sens = await self._read_block(KEYS["mk_sens_connected_bits"], 1, input_regs=True)  # 67,68 (bitfield)
 
         # Holding area (0..17 je u Futury souvislý rozsah)
         hold_main = await self._read_block(0, 18, input_regs=False)
@@ -169,6 +171,20 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         data["fan_rpm_supply"]   = self._u16_from(inp_40_48, 40, KEYS["fan_rpm_supply"])
         data["fan_rpm_exhaust"]  = self._u16_from(inp_40_48, 40, KEYS["fan_rpm_exhaust"])
         data["rtc_batt_voltage"] = self._u16_from(inp_52, 52, KEYS["rtc_batt_voltage"])
+
+        # UI controllers
+        bits = self._u16_from(
+            inp_mk_ui_bits, KEYS["mk_ui_connected_bits"], KEYS["mk_ui_connected_bits"]
+        )
+        data["mk_ui_connected_bits"] = bits
+        data["mk_ui_count"] = bits.bit_count()
+        _LOGGER.info("mk_ui_count:"+bits.bit_count())
+
+        # Sensors
+        bits = self._u32_from(inp_mk_sens, KEYS["mk_sens_connected_bits"], KEYS["mk_sens_connected_bits"])
+        data["mk_sens_connected_bits"] = bits
+        data["mk_sens_count"] = bits.bit_count()
+        _LOGGER.info("mk_sens_count:" + bits.bit_count())
 
         # ALFA
         bits = self._u16_from(
