@@ -16,6 +16,7 @@ from homeassistant.const import (
 
 from .entity import FuturaEntity
 from .coordinator import FuturaCoordinator
+from homeassistant.exceptions import ConfigEntryNotReady
 
 
 class FuturaSimpleSensor(FuturaEntity, SensorEntity):
@@ -56,6 +57,14 @@ class FuturaSimpleSensor(FuturaEntity, SensorEntity):
 async def async_setup_entry(hass, entry, async_add_entities):
     coord: FuturaCoordinator = hass.data["jablotron_futura"][entry.entry_id]
 
+    # We need coordinator data before creating "dynamic" entities (like ALFA sensors).
+    # This allows us to skip creating ALFA entities when alfa_count == 0.
+    # If the first refresh fails, raise ConfigEntryNotReady so HA retries setup later.
+    try:
+        await coord.async_config_entry_first_refresh()
+    except Exception as e:
+        raise ConfigEntryNotReady(f"Initial refresh failed: {e}") from e
+
     ents = []
 
     # Temperatures
@@ -71,20 +80,67 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     # mk UI
     ents.append(FuturaSimpleSensor(coord, "mk_ui_count", "UI sensors – počet"))
+    mk_ui_count = int(coord.data.get("mk_ui_count", 0) or 0)
+    if mk_ui_count > 0:
+        for i in range(1, 4):
+            avail = f"mk_ui_{i}_available"
+            if not bool(coord.data.get(avail, False)):
+                continue
+            prefix = f"UI ovladac {i}"
+            ents.append(FuturaSimpleSensor(coord, f"mk_ui_mb_address_{i}", f"{prefix} – adresa", avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"mk_ui_options_{i}", f"{prefix} – nastavení", avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"mk_ui_temp_{i}", f"{prefix} – teplota", UnitOfTemperature.CELSIUS,
+                                           SensorDeviceClass.TEMPERATURE, avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"mk_ui_humi_{i}", f"{prefix} – vlhkost", PERCENTAGE,
+                                           SensorDeviceClass.HUMIDITY, avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"mk_ui_co2_{i}", f"{prefix} – CO₂", CONCENTRATION_PARTS_PER_MILLION,
+                                           avail_key=avail))
+
     # mk sensors
     ents.append(FuturaSimpleSensor(coord, "mk_sens_count", "Sensors – počet"))
+    mk_sens_count = int(coord.data.get("mk_sens_count", 0) or 0)
+    if mk_sens_count > 0:
+        for i in range(1, 4):
+            avail = f"mk_sens_{i}_available"
+            if not bool(coord.data.get(avail, False)):
+                continue
+            prefix = f"Senzor {i}"
+            ents.append(FuturaSimpleSensor(coord, f"mk_sens_mb_address_{i}", f"{prefix} – adresa", avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"mk_sens_options_{i}", f"{prefix} – nastavení", avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"mk_sens_temp_{i}", f"{prefix} – teplota", UnitOfTemperature.CELSIUS,
+                                           SensorDeviceClass.TEMPERATURE, avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"mk_sens_humi_{i}", f"{prefix} – vlhkost", PERCENTAGE,
+                                           SensorDeviceClass.HUMIDITY, avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"mk_sens_co2_{i}", f"{prefix} – CO₂", CONCENTRATION_PARTS_PER_MILLION,
+                                           avail_key=avail))
 
     # ALFA controllers
     ents.append(FuturaSimpleSensor(coord, "alfa_count", "ALFA – počet"))
-    for i in range(1, 9):
-        prefix = f"ALFA {i}"
-        avail = f"alfa_{i}_available"
-        ents.append(FuturaSimpleSensor(coord, f"alfa_mb_address_{i}", f"{prefix} – adresa", avail_key=avail))
-        ents.append(FuturaSimpleSensor(coord, f"alfa_options_{i}", f"{prefix} – nastavení", avail_key=avail))
-        ents.append(FuturaSimpleSensor(coord, f"alfa_temp_{i}", f"{prefix} – teplota", UnitOfTemperature.CELSIUS, SensorDeviceClass.TEMPERATURE, avail_key=avail))
-        ents.append(FuturaSimpleSensor(coord, f"alfa_ntc_temp_{i}", f"{prefix} – teplota NTC", UnitOfTemperature.CELSIUS, SensorDeviceClass.TEMPERATURE, avail_key=avail))
-        ents.append(FuturaSimpleSensor(coord, f"alfa_humi_{i}", f"{prefix} – vlhkost", PERCENTAGE, SensorDeviceClass.HUMIDITY, avail_key=avail))
-        ents.append(FuturaSimpleSensor(coord, f"alfa_co2_{i}", f"{prefix} – CO₂", CONCENTRATION_PARTS_PER_MILLION, avail_key=avail))
+    # for i in range(1, 9):
+    #     prefix = f"ALFA {i}"
+    #     avail = f"alfa_{i}_available"
+    #     ents.append(FuturaSimpleSensor(coord, f"alfa_mb_address_{i}", f"{prefix} – adresa", avail_key=avail))
+    #     ents.append(FuturaSimpleSensor(coord, f"alfa_options_{i}", f"{prefix} – nastavení", avail_key=avail))
+    #     ents.append(FuturaSimpleSensor(coord, f"alfa_temp_{i}", f"{prefix} – teplota", UnitOfTemperature.CELSIUS, SensorDeviceClass.TEMPERATURE, avail_key=avail))
+    #     ents.append(FuturaSimpleSensor(coord, f"alfa_ntc_temp_{i}", f"{prefix} – teplota NTC", UnitOfTemperature.CELSIUS, SensorDeviceClass.TEMPERATURE, avail_key=avail))
+    #     ents.append(FuturaSimpleSensor(coord, f"alfa_humi_{i}", f"{prefix} – vlhkost", PERCENTAGE, SensorDeviceClass.HUMIDITY, avail_key=avail))
+    #     ents.append(FuturaSimpleSensor(coord, f"alfa_co2_{i}", f"{prefix} – CO₂", CONCENTRATION_PARTS_PER_MILLION, avail_key=avail))
+
+    alfa_count = int(coord.data.get("alfa_count", 0) or 0)
+    if alfa_count > 0:
+        # Create ALFA entities only for modules that are actually present/available.
+        # This keeps the entity registry clean (no useless entities when nothing is connected).
+        for i in range(1, 9):
+            avail = f"alfa_{i}_available"
+            if not bool(coord.data.get(avail, False)):
+                continue
+            prefix = f"ALFA {i}"
+            ents.append(FuturaSimpleSensor(coord, f"alfa_mb_address_{i}", f"{prefix} – adresa", avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"alfa_options_{i}", f"{prefix} – nastavení", avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"alfa_temp_{i}", f"{prefix} – teplota", UnitOfTemperature.CELSIUS,SensorDeviceClass.TEMPERATURE, avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"alfa_ntc_temp_{i}", f"{prefix} – teplota NTC", UnitOfTemperature.CELSIUS,SensorDeviceClass.TEMPERATURE, avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"alfa_humi_{i}", f"{prefix} – vlhkost", PERCENTAGE, SensorDeviceClass.HUMIDITY,avail_key=avail))
+            ents.append(FuturaSimpleSensor(coord, f"alfa_co2_{i}", f"{prefix} – CO₂", CONCENTRATION_PARTS_PER_MILLION, avail_key=avail))
 
     # Performance
     ents.append(FuturaSimpleSensor(coord, "filter_wear", "Zanesení filtrů", PERCENTAGE))

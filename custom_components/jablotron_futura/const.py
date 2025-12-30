@@ -20,6 +20,9 @@ PLATFORMS = [
 INP_START_MAIN = 14
 INP_LEN_MAIN = 37   # 14..52
 INP_START_ALFA = 160
+INP_START_MK_UI = 100
+INP_START_MK_SENS = 115
+
 
 # Holding registers (read/write)
 HOLD_START_MAIN = 0
@@ -92,6 +95,8 @@ for i in range(1, 9):
     KEYS[f"alfa_temp_{i}"] = base + 3         # int16 x0.1 °C
     KEYS[f"alfa_humi_{i}"] = base + 4         # uint16 x0.1 %
     KEYS[f"alfa_ntc_temp_{i}"] = base + 5     # int16 x0.1 °C
+
+
 
 VENT_MODE_MAP = {
     "Vypnuto": 0,

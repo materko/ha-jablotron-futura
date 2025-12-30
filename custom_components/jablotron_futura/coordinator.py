@@ -13,7 +13,7 @@ from homeassistant.util import dt as ha_dt
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ModbusException
 
-from .const import DOMAIN, CONF_UNIT_ID, DEFAULT_UNIT_ID, KEYS, INP_START_ALFA
+from .const import DOMAIN, CONF_UNIT_ID, DEFAULT_UNIT_ID, KEYS, INP_START_ALFA, INP_START_MK_UI, INP_START_MK_SENS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -185,13 +185,46 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         )
         data["mk_ui_connected_bits"] = bits16
         data["mk_ui_count"] = bits16.bit_count()
-        _LOGGER.info("mk_ui_count: %s", data["mk_ui_count"])
+        #_LOGGER.info("mk_ui_count: %s", data["mk_ui_count"])
+        if data["mk_ui_count"] > 0:
+            for i in range(1, 4):
+                connected = bool(bits16 & (1 << (i - 1)))
+                data[f"mk_ui_{i}_available"] = connected
+                if not connected:
+                    continue
+                base = INP_START_MK_UI + (i - 1) * 10
+                # Each MK UI occupies the first five registers of its 10-register slot
+                # (100..104, 105..109, ...). Reading beyond 5 registers may trigger
+                # ILLEGAL DATA ADDRESS errors, so limit the range.
+                block = await self._read_block(base, 5, input_regs=True)
+                data[f"mk_ui_mb_address_{i}"] = self._u16_from(block, base, base)
+                data[f"mk_ui_options_{i}"] = self._u16_from(block, base, base + 1)
+                data[f"mk_ui_co2_{i}"] = self._u16_from(block, base, base + 2)
+                data[f"mk_ui_temp_{i}"] = self._i16_from(block, base, base + 3) / 10.0
+                data[f"mk_ui_humi_{i}"] = self._u16_from(block, base, base + 4) / 10.0
+
 
         # # Sensors
         bits32 = self._u32_from_low_high(inp_mk_sens, KEYS["mk_sens_connected_bits"], KEYS["mk_sens_connected_bits"])
         data["mk_sens_connected_bits"] = bits32
         data["mk_sens_count"] = bits32.bit_count()
-        _LOGGER.info("mk_sens_count: %s (bits32=%s)", data["mk_sens_count"], bits32)
+        #_LOGGER.info("mk_sens_count: %s (bits32=%s)", data["mk_sens_count"], bits32)
+        if data["mk_sens_count"] > 0:
+            for i in range(1, 9):
+                connected = bool(bits32 & (1 << (i - 1)))
+                data[f"mk_sens_{i}_available"] = connected
+                if not connected:
+                    continue
+                base = INP_START_MK_SENS + (i - 1) * 10
+                # Each MK SENS occupies the first five registers of its 10-register slot
+                # (115..119, 120..124, ...). Reading beyond 5 registers may trigger
+                # ILLEGAL DATA ADDRESS errors, so limit the range.
+                block = await self._read_block(base, 5, input_regs=True)
+                data[f"mk_sens_mb_address_{i}"] = self._u16_from(block, base, base)
+                data[f"mk_sens_options_{i}"] = self._u16_from(block, base, base + 1)
+                data[f"mk_sens_co2_{i}"] = self._u16_from(block, base, base + 2)
+                data[f"mk_sens_temp_{i}"] = self._i16_from(block, base, base + 3) / 10.0
+                data[f"mk_sens_humi_{i}"] = self._u16_from(block, base, base + 4) / 10.0
 
         # ALFA
         bits = self._u16_from(
@@ -199,22 +232,23 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         )
         data["alfa_connected_bits"] = bits
         data["alfa_count"] = bits.bit_count()
-        for i in range(1, 9):
-            connected = bool(bits & (1 << (i - 1)))
-            data[f"alfa_{i}_available"] = connected
-            if not connected:
-                continue
-            base = INP_START_ALFA + (i - 1) * 10
-            # Each ALFA occupies the first six registers of its 10-register slot
-            # (160..165, 170..175, ...). Reading beyond 6 registers may trigger
-            # ILLEGAL DATA ADDRESS errors, so limit the range.
-            block = await self._read_block(base, 6, input_regs=True)
-            data[f"alfa_mb_address_{i}"] = self._u16_from(block, base, base)
-            data[f"alfa_options_{i}"] = self._u16_from(block, base, base + 1)
-            data[f"alfa_co2_{i}"] = self._u16_from(block, base, base + 2)
-            data[f"alfa_temp_{i}"] = self._i16_from(block, base, base + 3) / 10.0
-            data[f"alfa_humi_{i}"] = self._u16_from(block, base, base + 4) / 10.0
-            data[f"alfa_ntc_temp_{i}"] = self._u16_from(block, base, base + 5) / 10.0
+        if data["alfa_count"] > 0:
+            for i in range(1, 9):
+                connected = bool(bits & (1 << (i - 1)))
+                data[f"alfa_{i}_available"] = connected
+                if not connected:
+                    continue
+                base = INP_START_ALFA + (i - 1) * 10
+                # Each ALFA occupies the first six registers of its 10-register slot
+                # (160..165, 170..175, ...). Reading beyond 6 registers may trigger
+                # ILLEGAL DATA ADDRESS errors, so limit the range.
+                block = await self._read_block(base, 6, input_regs=True)
+                data[f"alfa_mb_address_{i}"] = self._u16_from(block, base, base)
+                data[f"alfa_options_{i}"] = self._u16_from(block, base, base + 1)
+                data[f"alfa_co2_{i}"] = self._u16_from(block, base, base + 2)
+                data[f"alfa_temp_{i}"] = self._i16_from(block, base, base + 3) / 10.0
+                data[f"alfa_humi_{i}"] = self._u16_from(block, base, base + 4) / 10.0
+                data[f"alfa_ntc_temp_{i}"] = self._u16_from(block, base, base + 5) / 10.0
 
         # Holding area
         for k in (
