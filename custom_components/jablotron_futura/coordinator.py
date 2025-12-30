@@ -180,11 +180,11 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         data["mk_ui_count"] = bits.bit_count()
         _LOGGER.info("mk_ui_count:"+bits.bit_count())
 
-        # Sensors
-        bits = self._u32_from(inp_mk_sens, KEYS["mk_sens_connected_bits"], KEYS["mk_sens_connected_bits"])
-        data["mk_sens_connected_bits"] = bits
-        data["mk_sens_count"] = bits.bit_count()
-        _LOGGER.info("mk_sens_count:" + bits.bit_count())
+        # # Sensors
+        # bits = self._u32_from(inp_mk_sens, KEYS["mk_sens_connected_bits"], KEYS["mk_sens_connected_bits"])
+        # data["mk_sens_connected_bits"] = bits
+        # data["mk_sens_count"] = bits.bit_count()
+        # _LOGGER.info("mk_sens_count:" + bits.bit_count())
 
         # ALFA
         bits = self._u16_from(
