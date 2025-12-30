@@ -94,10 +94,11 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         return list(rr.registers)
 
     @staticmethod
-    def _u32_from_low_high(self, data: dict, reg: int) -> int:
-        low = data[reg] & 0xFFFF
-        high = data[reg + 1] & 0xFFFF
-        return (high << 16) | low
+    def _u32_from_low_high(block: list[int], base: int, addr: int) -> int:
+        idx = addr - base
+        lo = block[idx]  # reg 67
+        hi = block[idx + 1]  # reg 68
+        return ((hi & 0xFFFF) << 16) | (lo & 0xFFFF)
 
     @staticmethod
     def _u32_from(block: list[int], base: int, addr: int) -> int:
