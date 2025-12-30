@@ -100,7 +100,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     ents.append(FuturaSimpleSensor(coord, "mk_sens_count", "Senzory – počet"))
     mk_sens_count = int(coord.data.get("mk_sens_count", 0) or 0)
     if mk_sens_count > 0:
-        for i in range(1, 16):
+        for i in range(1, 8):
             avail = f"mk_sens_{i}_available"
             if not bool(coord.data.get(avail, False)):
                 continue
