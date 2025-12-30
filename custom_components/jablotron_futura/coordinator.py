@@ -94,6 +94,12 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         return list(rr.registers)
 
     @staticmethod
+    def _u32_from_low_high(self, data: dict, reg: int) -> int:
+        low = data[reg] & 0xFFFF
+        high = data[reg + 1] & 0xFFFF
+        return (high << 16) | low
+
+    @staticmethod
     def _u32_from(block: list[int], base: int, addr: int) -> int:
         idx = addr - base
         hi = block[idx]
@@ -181,7 +187,7 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         _LOGGER.info("mk_ui_count: %s", data["mk_ui_count"])
 
         # # Sensors
-        bits32 = self._u32_from(inp_mk_sens, KEYS["mk_sens_connected_bits"], KEYS["mk_sens_connected_bits"])
+        bits32 = self._u32_from_low_high(inp_mk_sens, KEYS["mk_sens_connected_bits"], KEYS["mk_sens_connected_bits"])
         data["mk_sens_connected_bits"] = bits32
         data["mk_sens_count"] = bits32.bit_count()
         _LOGGER.info("mk_sens_count: %s (bits32=%s)", data["mk_sens_count"], bits32)
