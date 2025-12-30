@@ -210,7 +210,7 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         data["mk_sens_count"] = bits32.bit_count()
         #_LOGGER.info("mk_sens_count: %s (bits32=%s)", data["mk_sens_count"], bits32)
         if data["mk_sens_count"] > 0:
-            for i in range(1, 9):
+            for i in range(1, 16):
                 connected = bool(bits32 & (1 << (i - 1)))
                 data[f"mk_sens_{i}_available"] = connected
                 if not connected:
