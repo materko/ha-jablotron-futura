@@ -192,8 +192,8 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 data[f"mk_ui_{i}_available"] = connected
                 if not connected:
                     continue
-                base = INP_START_MK_UI + (i - 1) * 10
-                # Each MK UI occupies the first five registers of its 10-register slot
+                base = INP_START_MK_UI + (i - 1) * 5
+                # Each MK UI occupies the first five registers of its 5-register slot
                 # (100..104, 105..109, ...). Reading beyond 5 registers may trigger
                 # ILLEGAL DATA ADDRESS errors, so limit the range.
                 block = await self._read_block(base, 5, input_regs=True)
@@ -216,7 +216,7 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 if not connected:
                     continue
                 base = INP_START_MK_SENS + (i - 1) * 5
-                # Each MK SENS occupies the first five registers of its 10-register slot
+                # Each MK SENS occupies the first five registers of its 5-register slot
                 # (115..119, 120..124, ...). Reading beyond 5 registers may trigger
                 # ILLEGAL DATA ADDRESS errors, so limit the range.
                 block = await self._read_block(base, 5, input_regs=True)
