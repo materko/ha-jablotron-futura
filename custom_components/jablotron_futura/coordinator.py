@@ -215,7 +215,7 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
                 data[f"mk_sens_{i}_available"] = connected
                 if not connected:
                     continue
-                base = INP_START_MK_SENS + (i - 1) * 10
+                base = INP_START_MK_SENS + (i - 1) * 5
                 # Each MK SENS occupies the first five registers of its 10-register slot
                 # (115..119, 120..124, ...). Reading beyond 5 registers may trigger
                 # ILLEGAL DATA ADDRESS errors, so limit the range.
