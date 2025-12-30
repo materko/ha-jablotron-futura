@@ -173,18 +173,18 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         data["rtc_batt_voltage"] = self._u16_from(inp_52, 52, KEYS["rtc_batt_voltage"])
 
         # UI controllers
-        bits = self._u16_from(
+        bits16 = self._u16_from(
             inp_mk_ui_bits, KEYS["mk_ui_connected_bits"], KEYS["mk_ui_connected_bits"]
         )
-        data["mk_ui_connected_bits"] = bits
-        data["mk_ui_count"] = bits.bit_count()
-        _LOGGER.info("mk_ui_count:"+bits.bit_count())
+        data["mk_ui_connected_bits"] = bits16
+        data["mk_ui_count"] = bits16.bit_count()
+        _LOGGER.info("mk_ui_count: %s", data["mk_ui_count"])
 
         # # Sensors
-        # bits = self._u32_from(inp_mk_sens, KEYS["mk_sens_connected_bits"], KEYS["mk_sens_connected_bits"])
-        # data["mk_sens_connected_bits"] = bits
-        # data["mk_sens_count"] = bits.bit_count()
-        # _LOGGER.info("mk_sens_count:" + bits.bit_count())
+        bits32 = self._u32_from(inp_mk_sens, KEYS["mk_sens_connected_bits"], KEYS["mk_sens_connected_bits"])
+        data["mk_sens_connected_bits"] = bits32
+        data["mk_sens_count"] = bits32.bit_count()
+        _LOGGER.info("mk_sens_count: %s (bits32=%s)", data["mk_sens_count"], bits32)
 
         # ALFA
         bits = self._u16_from(

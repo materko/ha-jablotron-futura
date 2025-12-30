@@ -69,6 +69,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for k, n in (("humi_outdoor","Vlhkost venku"),("humi_supply","Vlhkost do domu"),("humi_extract","Vlhkost z domu"),("humi_exhaust","Vlhkost odtah")):
         ents.append(FuturaSimpleSensor(coord, k, n, PERCENTAGE, SensorDeviceClass.HUMIDITY))
 
+    # mk UI
+    ents.append(FuturaSimpleSensor(coord, "mk_ui_count", "UI sensors – počet"))
+    # mk sensors
+    ents.append(FuturaSimpleSensor(coord, "mk_sens_count", "Sensors – počet"))
+
     # ALFA controllers
     ents.append(FuturaSimpleSensor(coord, "alfa_count", "ALFA – počet"))
     for i in range(1, 9):
