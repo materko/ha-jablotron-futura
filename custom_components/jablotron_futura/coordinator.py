@@ -123,7 +123,7 @@ class FuturaCoordinator(DataUpdateCoordinator[Dict[str, Any]]):
         inp_52 = await self._read_block(52, 1, input_regs=True)      # 52 baterie RTC
         inp_alfa_bits = await self._read_block(KEYS["alfa_connected_bits"], 1, input_regs=True)  # 75 (bitfield)
         inp_mk_ui_bits = await self._read_block(KEYS["mk_ui_connected_bits"], 1, input_regs=True)  # 66 (bitfield)
-        inp_mk_sens = await self._read_block(KEYS["mk_sens_connected_bits"], 1, input_regs=True)  # 67,68 (bitfield)
+        inp_mk_sens = await self._read_block(KEYS["mk_sens_connected_bits"], 2, input_regs=True)  # 67,68 (bitfield)
 
         # Holding area (0..17 je u Futury souvislý rozsah)
         hold_main = await self._read_block(0, 18, input_regs=False)
